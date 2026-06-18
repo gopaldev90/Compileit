@@ -1,0 +1,14 @@
+{
+  "path": {
+    "android": {
+      "defalt_code_dir": "/storage/shared/Codes"
+    },
+    "linux": {
+      "defalt_code_dir": "/home/user/Codes"
+    }
+  },
+  "extension": {
+    "android": "axe",
+    "linux": "mixe"
+  }
+}

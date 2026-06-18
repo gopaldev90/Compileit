@@ -1,0 +1,11 @@
+[package]
+name = "compileit"
+version = "0.1.1"
+edition = "2024"
+
+[dependencies]
+ctrlc = "*"
+colored = "2"
+hex = "0.4"
+sha2 = "*"
+serde_json = "*"
