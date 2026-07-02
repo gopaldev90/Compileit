@@ -192,9 +192,9 @@ pub fn checkfileastitv(file: &str) {
         std::process::exit(1);
     }
 }
-pub fn changdir(dest: &str) {
+pub fn changdir(dest: &std::path::Path) {
     if let Err(_) = std::env::set_current_dir(&dest) {
-        error(&format!("Failed to enter {dest}"));
+        error(&format!("Failed to enter {}",dest.display()));
         std::process::exit(1);
     }
 }

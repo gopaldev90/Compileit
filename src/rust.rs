@@ -8,7 +8,7 @@ use std:: {
 };
 use crate::utils;
 
-pub fn compile_project(dfcd: &str, home: &str, extension: &str, prjd: &str, mode: bool) -> Result<(), Box<dyn std::error::Error>> {
+pub fn compile_project(dfcd: &std::path::Path, home: &std::path::Path, extension: &str, prjd: &str, mode: bool) -> Result<(), Box<dyn std::error::Error>> {
     let project_dir = std::path::Path::new(prjd);
     let default_code_dir = std::path::Path::new(dfcd);
     let home_project = std::path::Path::new(home).join(&project_dir);
@@ -16,7 +16,7 @@ pub fn compile_project(dfcd: &str, home: &str, extension: &str, prjd: &str, mode
     let src_dir = default_code_dir.join(&project_dir).join("src");
     if !src_dir.exists(){
         println!("{prjd} project hai hee nhin");
-        println!("ismain {dfcd}");
+        println!("ismain {}",dfcd.display());
         return Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, "src_dir does not exist",)));
     }
     utils::copy_src_files(&src_dir,&home_src,"rs")?;
@@ -29,7 +29,7 @@ pub fn compile_project(dfcd: &str, home: &str, extension: &str, prjd: &str, mode
             println!("{file} nhin mili");
         }
     }
-    utils::changdir(&home_project.display().to_string());
+    utils::changdir(&home_project);
     if mode {
         let status = Command::new("cargo")
         .arg("run")
@@ -49,7 +49,7 @@ pub fn compile_project(dfcd: &str, home: &str, extension: &str, prjd: &str, mode
     utils::moveto_dfcd(&dest_dir,&renamed_bin,&exe_name)
 }
 
-pub fn compile_single(file: &str, default_code_dir: &str, extension: &str)-> Result<(), Box<dyn std::error::Error>> {
+pub fn compile_single(file: &str, default_code_dir: &std::path::Path, extension: &str)-> Result<(), Box<dyn std::error::Error>> {
     utils::changdir(default_code_dir);
     utils::checkfileastitv(file);
     let mut file_name = file.to_string();

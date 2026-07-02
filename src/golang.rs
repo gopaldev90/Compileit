@@ -6,7 +6,7 @@ use std:: {
 };
 use crate::utils;
 
-pub fn compile_project(dfcd: &str, home: &str, extension: &str, prjd: &str) -> Result<(), Box<dyn std::error::Error>> {
+pub fn compile_project(dfcd: &std::path::Path, home: &std::path::Path, extension: &str, prjd: &str) -> Result<(), Box<dyn std::error::Error>> {
     let project_dir = std::path::Path::new(prjd);
     let default_code_dir = std::path::Path::new(dfcd);
     let home_dir = std::path::Path::new(home);
@@ -23,10 +23,10 @@ pub fn compile_project(dfcd: &str, home: &str, extension: &str, prjd: &str) -> R
         }
     }else {
         println!("{prjd} project hai hee nhin");
-        println!("ismain {dfcd}");
+        println!("ismain {}",dfcd.display());
         return Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, "src_dir does not exist",)));
     }
-    utils::changdir(&home_project.display().to_string());
+    utils::changdir(&home_project);
     {
         let file ="go.mod";
         let dst = home_project.join(file);
@@ -65,7 +65,7 @@ pub fn compile_project(dfcd: &str, home: &str, extension: &str, prjd: &str) -> R
     }
     Ok(())
 }
-pub fn compile_single(file: &str, default_code_dir: &str, extension: &str)->Result<(), Box<dyn std::error::Error>> {
+pub fn compile_single(file: &str, default_code_dir: &std::path::Path, extension: &str)->Result<(), Box<dyn std::error::Error>> {
     utils::changdir(default_code_dir);
     utils::checkfileastitv(file);
     let file_name = utils::replaceunderscore(&file);

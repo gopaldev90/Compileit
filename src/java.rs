@@ -17,7 +17,7 @@ fn cleanup_class_files(dir: &str) -> io::Result<()> {
     Ok(())
 }
 
-pub fn single(default_code_dir: &str) -> io::Result<()> {
+pub fn single(default_code_dir: &std::path::Path) -> io::Result<()> {
     utils::changdir(&default_code_dir);
     let file = fs::read_dir(".")?
         .filter_map(|e| e.ok())
@@ -65,14 +65,14 @@ pub fn single(default_code_dir: &str) -> io::Result<()> {
     Ok(())
 }
 
-pub fn project(default_code_dir: &str) -> io::Result<()> {
+pub fn project(default_code_dir: &std::path::Path) -> io::Result<()> {
     utils::changdir(&default_code_dir);
     let src = Path::new(default_code_dir).join("src/main/java");
     if !src.is_dir() {
         println!("Source directory not found.");
         exit(1);
     }
-    utils::changdir(&src.display().to_string());
+    utils::changdir(&src);
     let mut classpath = ".".to_string();
     for entry in fs::read_dir(".")? {
         let path = entry?.path();
