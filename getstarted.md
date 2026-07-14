@@ -17,7 +17,7 @@ Windows support is not currently a target.
 
 
 Clone the Repository
-
+```
 git clone https://github.com/gopaldev90/Compileit.git
 
 cd Compileit
@@ -25,7 +25,7 @@ cd Compileit
 chmod +x bash.sh
 
 bash setup.sh
-
+```
 ---
 
 
@@ -60,31 +60,6 @@ javac
 java
 
 If these programs aren't installed, CompileIt cannot summon them through sheer optimism.
-
----
-
-Configuration
-
-CompileIt reads:
-
-~/compileit_config.json
-
-Example:
-
-{
-  "path": {
-    "android": {
-      "default_code_dir": "storage/shared/Codes"
-    },
-    "linux": {
-      "default_code_dir": "Codes"
-    }
-  },
-  "extension": {
-    "android": "axe",
-    "linux": "mixe"
-  }
-}
 
 ---
 
