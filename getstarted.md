@@ -19,11 +19,8 @@ Windows support is not currently a target.
 Clone the Repository
 ```
 git clone https://github.com/gopaldev90/Compileit.git
-
 cd Compileit
-
-chmod +x bash.sh
-
+chmod +x setup.sh
 bash setup.sh
 ```
 ---
