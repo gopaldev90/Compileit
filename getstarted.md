@@ -195,7 +195,7 @@ Move it into an executable directory or use your preferred helper utility.
 
 Getting Help
 
-compileit -help
+compileit --help
 
 If something still doesn't work, open an issue on GitHub with:
 
