@@ -143,11 +143,7 @@ Troubleshooting
 
 compileit: command not found
 
-Make sure Cargo's binary directory is in your PATH.
-
-Usually:
-
-export PATH="$HOME/.cargo/bin:$PATH"
+you forgot to run startup.sh
 
 ---
 
@@ -194,18 +190,6 @@ Welcome to Android.
 Your executable is probably sitting in shared storage with the "noexec" flag.
 
 Move it into an executable directory or use your preferred helper utility.
-
----
-
-Updating CompileIt
-
-git pull
-
-cargo build --release
-
-Or reinstall:
-
-cargo install --path .
 
 ---
 
