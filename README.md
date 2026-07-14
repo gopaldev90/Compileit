@@ -57,9 +57,13 @@ Designed specifically for Termux as well as desktop Linux
 Supported Languages
 
 Languag Single File Project
+
 Rust         ✅     ✅
+
 C++          ✅     ✅
+
 Go.          ✅     ✅
+
 Java.        ✅     ✅ 
 
 CompileIt detects the language automatically.
