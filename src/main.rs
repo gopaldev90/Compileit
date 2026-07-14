@@ -8,6 +8,7 @@ fn checkln(args: &[String], akaar: usize, msg: &str) {
     if args.len() < akaar {
         utils::error(&format!("{}", msg));
         utils::error("run help for details");
+        utils::info("run compileit -help");
         std::process::exit(1);
     }
 }
