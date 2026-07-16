@@ -50,31 +50,35 @@ fn sahayta() {
     println!("  Go   (.go)");
     println!("  Java (.java)");
 }
-fn sambhaalo_input(args: &[String], defalt_code_dir: &mut std::path::PathBuf, extension: &str) ->i32 {
-    checkln(&args, 2, "koi arg do");
-    let homestr = std::env::var("HOME").expect("home not set");
+fn sambhaalo_input(args: &[String], extension: &str) ->i32 {
+    let homestr = std::env::var("HOME").expect("HOME not set");
     let home = std::path::Path::new(&homestr);
+    let mut defalt_code_dir = std::env::current_dir().unwrap();
     utils::changdir(&defalt_code_dir);
-    {
-        let mode = args[1].as_str();
-        if mode == "-help" || mode == "-newfile" {
-            let safalparin: i32;
-            if mode == "-help" {
+    let mut filename = if args.len() <= 1 {
+        ".".to_string()
+    } else {
+        match args[1].as_str() {
+            "-help" => {
                 sahayta();
-                safalparin = 5;
-            }else {
+                return 5;
+            }
+            "-newfile" => {
                 checkln(&args, 3, "file ka naam.extension do Jo bnani hai");
-                if let Some((filename, prakaar)) = args[2].rsplit_once(".") {
-                    let _ = utils::snippets(&filename, &prakaar);
-                    safalparin = 4;
-                }else {
-                    safalparin = 3;
+                if let Some((filename, extension)) = args[2].rsplit_once('.') {
+                    let _ = utils::snippets(filename, extension);
+                    return 4;
+                } else {
+                    return 3;
                 }
             }
-            return safalparin;
+            other => other.to_string(),
         }
+    };
+    if filename == "." {
+        filename = defalt_code_dir.file_name().unwrap().display().to_string();
+        defalt_code_dir = defalt_code_dir.parent().unwrap().to_path_buf();
     }
-    let filename=&args[1];
     let path = std::path::Path::new(&defalt_code_dir).join(&filename);
     if !path.exists() {
         println!("{} hai hee nhin", filename);
@@ -132,9 +136,7 @@ fn sambhaalo_input(args: &[String], defalt_code_dir: &mut std::path::PathBuf, ex
 fn main() {
     let mut args: Vec<String> = std::env::args().collect();
     args.push("₹".to_string());
-    let mut defalt_code_dir = std::env::current_dir().unwrap();
     let extension: String;
-    utils::changdir(&defalt_code_dir);
     args.pop();
     let haiandroid = utils::haiandroid();
     let hailinux = std::env::consts::OS == "linux";
@@ -150,7 +152,7 @@ fn main() {
         extension = "mixe".to_string();
     }
     let aarambh = std::time::Instant::now();
-    let safalparin = sambhaalo_input(&args, &mut defalt_code_dir, &extension);
+    let safalparin = sambhaalo_input(&args, &extension);
     let lga = aarambh.elapsed().as_secs_f64();
     match safalparin {
         0 => {

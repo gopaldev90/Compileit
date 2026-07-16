@@ -4,7 +4,32 @@ set -euo pipefail
 BIN_DIR="$HOME/.local/bin"
 SOURCE="./compileit.axe"
 TARGET="$BIN_DIR/compileit"
-
+# add this function in your .bashrc file to run compiled binary
+chlao(){
+    local src="$1"
+    local kahan_they="$PWD"
+    shift
+    local fname=$(basename "$src")
+    local dest="$HOME/$fname"
+    cleanup(){
+        if [ -f "$dest" ]; then
+          rm "$dest"
+          cd "$kahan_they"
+          echo -e "${LIGHT_GREEN}Shree shivaay namashtubhyam${RESET}"
+        fi
+        cd "$kahan_they"
+    }
+    trap cleanup RETURN INT TERM
+    if [ -f "$src" ]; then
+        cp "$src" "$dest" || return 1
+        cd "$HOME"
+        chmod +x "$fname"
+        ./"$fname" "$@"
+        cleanup
+    else
+        echo -e "${RED}$src hai hee nahi${RESET}"
+    fi
+}
 main() {
     if [[ ! -f "$SOURCE" ]]; then
         echo "Error: '$SOURCE' not found."

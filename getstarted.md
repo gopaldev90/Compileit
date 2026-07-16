@@ -131,11 +131,23 @@ Android shared storage is usually mounted with the noexec flag.
 
 This means executables stored there cannot be run directly.
 
-CompileIt works well with helper tools such as loadbin or chlao, which copy executables into an executable location before running them.
+CompileIt works well.
+
+executables into an executable location before running them.
 
 This isn't CompileIt's fault.
 
 It's Android expressing its feelings.
+
+##To run binary elf file(.axe):
+
+copy chlao function from startup.sh to .bashrc or whatever shell you using.
+
+reload shell
+
+```
+chlao <your_project_compiled_binary>
+```
 
 ---
 

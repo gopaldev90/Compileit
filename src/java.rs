@@ -60,49 +60,38 @@ pub fn single(default_code_dir: &std::path::Path) -> std::io::Result<()> {
 }
 
 pub fn project(default_code_dir: &std::path::Path) -> std::io::Result<()> {
-
     let src = default_code_dir.join("src/main/java");
     let lib = default_code_dir.join("lib");
-
     if !src.is_dir() {
         println!("Source directory not found.");
         std::process::exit(1);
     }
-
     // Build classpath
     let mut classpath = ".".to_string();
-
     if lib.is_dir() {
         for entry in std::fs::read_dir(&lib)? {
             let path = entry?.path();
-
             if path.extension().and_then(|e| e.to_str()) == Some("jar") {
                 classpath.push(':');
                 classpath.push_str(path.to_str().unwrap());
             }
         }
     }
-
     // Compile
     let mut javac = std::process::Command::new("javac");
     javac.current_dir(&src);
     javac.arg("-cp").arg(&classpath);
-
     for entry in std::fs::read_dir(&src)? {
         let path = entry?.path();
-
         if path.extension().and_then(|e| e.to_str()) == Some("java") {
             javac.arg(path.file_name().unwrap());
         }
     }
-
     let status = javac.status()?;
-
     if !status.success() {
         println!("Compilation failed!");
         return Err(std::io::Error::other("javac failed"));
     }
-
     // Run
     let status = std::process::Command::new("java")
         .current_dir(&src)
@@ -110,13 +99,10 @@ pub fn project(default_code_dir: &std::path::Path) -> std::io::Result<()> {
         .arg(&classpath)
         .arg("Main")
         .status()?;
-
     if !status.success() {
         println!("Execution failed!");
     }
-
     cleanup_class_files(&src)?;
-
     Ok(())
 }
 
