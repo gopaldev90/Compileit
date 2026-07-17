@@ -3,7 +3,6 @@ mod cplusplus;
 mod java;
 mod utils;
 mod golang;
-
 fn checkln(args: &[String], akaar: usize, msg: &str) {
     if args.len() < akaar {
         utils::error(&format!("{}", msg));
@@ -64,8 +63,8 @@ fn sambhaalo_input(args: &[String], extension: &str) ->i32 {
                 return 5;
             }
             "-newfile" => {
-                checkln(&args, 3, "file ka naam.extension do Jo bnani hai");
-                if let Some((filename, extension)) = args[2].rsplit_once('.') {
+                checkln(&args, 2, "file ka naam.extension do Jo bnani hai");
+                if let Some((filename, extension)) = args[1].rsplit_once('.') {
                     let _ = utils::snippets(filename, extension);
                     return 4;
                 } else {
@@ -75,20 +74,24 @@ fn sambhaalo_input(args: &[String], extension: &str) ->i32 {
             other => other.to_string(),
         }
     };
+    if filename.ends_with("/"){
+        filename.pop();
+    }
     if filename == "." {
         filename = defalt_code_dir.file_name().unwrap().display().to_string();
         defalt_code_dir = defalt_code_dir.parent().unwrap().to_path_buf();
     }
-    let path = std::path::Path::new(&defalt_code_dir).join(&filename);
+    let path = defalt_code_dir.join(&filename);
     if !path.exists() {
         println!("{} hai hee nhin", filename);
         println!("ismain {}", defalt_code_dir.display());
         return 0;
     }
     let mode = utils::decide_project_type(&path).unwrap();
+    let pathhaidir:bool=path.is_dir();
     let safalparin = match mode {
         utils::BhasaPrakaar::Rust => {
-            let safalparin = if path.is_dir() {
+            let safalparin = if pathhaidir {
                 let debugmod = if let Some(m) = args.get(4) {
                     m == "d" || m == "debug"
                 } else {
@@ -101,16 +104,16 @@ fn sambhaalo_input(args: &[String], extension: &str) ->i32 {
             i32::from(safalparin)
         }
         utils::BhasaPrakaar::Cplusplus => {
-            let safalparin = if path.is_dir() {
+            let safalparin = if pathhaidir {
                 let prjd = std::path::Path::new(path.file_name().unwrap());
                 cplusplus::compile_project(&prjd, &defalt_code_dir, &home, &extension).is_ok()
             }else {
-                cplusplus::compile_single(&filename.to_string(), &defalt_code_dir, &extension).is_ok()
+                cplusplus::compile_single(&filename, &defalt_code_dir, &extension).is_ok()
             };
             i32::from(safalparin)
         }
         utils::BhasaPrakaar::Golang => {
-            let safalparin = if path.is_dir() {
+            let safalparin = if pathhaidir {
                 golang::compile_project(&defalt_code_dir, &home, extension, &filename).is_ok()
             }else {
                 golang::compile_single(&filename, &defalt_code_dir, &extension).is_ok()
@@ -118,10 +121,10 @@ fn sambhaalo_input(args: &[String], extension: &str) ->i32 {
             i32::from(safalparin)
         }
         utils::BhasaPrakaar::Java => {
-            let safalparin = if !path.is_dir() {
-                java::single(&defalt_code_dir).is_ok()
-            }else {
+            let safalparin = if pathhaidir {
                 java::project(&path).is_ok()
+            }else {
+                java::single(&defalt_code_dir).is_ok()
             };
             i32::from(safalparin)
         }
@@ -134,10 +137,8 @@ fn sambhaalo_input(args: &[String], extension: &str) ->i32 {
 }
 
 fn main() {
-    let mut args: Vec<String> = std::env::args().collect();
-    args.push("₹".to_string());
+    let args: Vec<String> = std::env::args().collect();
     let extension: String;
-    args.pop();
     let haiandroid = utils::haiandroid();
     let hailinux = std::env::consts::OS == "linux";
     let hailinuxkernal = hailinux || haiandroid;
@@ -145,7 +146,6 @@ fn main() {
         utils::error("anjaan os");
         std::process::exit(1);
     }
-    let exitcode: i32;
     if haiandroid {
         extension = "axe".to_string();
     }else {
@@ -153,7 +153,7 @@ fn main() {
     }
     let aarambh = std::time::Instant::now();
     let safalparin = sambhaalo_input(&args, &extension);
-    let lga = aarambh.elapsed().as_secs_f64();
+    let lga = aarambh.elapsed().as_secs();
     match safalparin {
         0 => {
             utils::error("sangrahit vifal");
@@ -164,6 +164,6 @@ fn main() {
         }
         _ => {}
     }
-    exitcode = 1-i32::from([1, 4, 5, 6].contains(&safalparin));
+    let exitcode:i32 = 1-i32::from([1, 4, 5, 6].contains(&safalparin));
     std::process::exit(exitcode);
 }

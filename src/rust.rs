@@ -1,5 +1,4 @@
 use crate::utils;
-
 pub fn compile_project(default_code_dir: &std::path::Path, home: &std::path::Path, extension: &str, prjd: &str, mode: bool) -> Result<(), Box<dyn std::error::Error>> {
     let project_dir = std::path::Path::new(prjd);
     let project_root = default_code_dir.join(project_dir);

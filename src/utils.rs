@@ -38,27 +38,85 @@ fn lang_from_extension(ext: &str) -> Option<BhasaPrakaar> {
         _ => None,
     }
 }
-fn iskeandarjaao(searchpath: &std::path::Path) -> std::io::Result<BhasaPrakaar> {
+
+pub fn decide_project_type(searchpath: &Path) -> std::io::Result<BhasaPrakaar> {
+    if searchpath.is_file() {
+        return Ok(
+            searchpath
+                .extension()
+                .and_then(|e| e.to_str())
+                .and_then(lang_from_extension)
+                .unwrap_or(BhasaPrakaar::Unknown),
+        );
+    }
+    if searchpath.join("Cargo.toml").exists() {
+        return Ok(BhasaPrakaar::Rust);
+    }
+    if searchpath.join("go.mod").exists() {
+        return Ok(BhasaPrakaar::Golang);
+    }
+    if searchpath.join("pom.xml").exists()
+        || searchpath.join("build.gradle").exists()
+        || searchpath.join("build.gradle.kts").exists()
+    {
+        return Ok(BhasaPrakaar::Java);
+    }
+    if searchpath.join("CMakeLists.txt").exists()
+        || searchpath.join("Makefile").exists()
+    {
+        return Ok(BhasaPrakaar::Cplusplus);
+    }
     for entry in std::fs::read_dir(searchpath)? {
-        let entry = entry?;
-        let path = entry.path();
+        let path = entry?.path();
+        if path.is_file() {
+            if let Some(lang) = path
+                .extension()
+                .and_then(|e| e.to_str())
+                .and_then(lang_from_extension)
+            {
+                return Ok(lang);
+            }
+        }
+    }
+    recursive_scan(searchpath)
+}
+
+fn recursive_scan(dir: &Path) -> std::io::Result<BhasaPrakaar> {
+    const SKIP: &[&str] = &[
+        "target",
+        ".git",
+        "node_modules",
+        ".idea",
+        ".vscode",
+        "build",
+        "out",
+        "bin",
+    ];
+
+    for entry in std::fs::read_dir(dir)? {
+        let path = entry?.path();
+
         if path.is_dir() {
-            let lang = iskeandarjaao(&path)?;
+            if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+                if SKIP.contains(&name) {
+                    continue;
+                }
+            }
+
+            let lang = recursive_scan(&path)?;
             if lang != BhasaPrakaar::Unknown {
                 return Ok(lang);
             }
-        } else if let Some(lang) = path.extension().and_then(|e| e.to_str()).and_then(lang_from_extension) {
+        } else if let Some(lang) = path
+            .extension()
+            .and_then(|e| e.to_str())
+            .and_then(lang_from_extension)
+        {
             return Ok(lang);
         }
     }
+
     Ok(BhasaPrakaar::Unknown)
-}
-pub fn decide_project_type(searchpath: &Path) -> std::io::Result<BhasaPrakaar> {
-    if searchpath.is_file() {
-        Ok(searchpath.extension().and_then(|e| e.to_str()).and_then(lang_from_extension).unwrap_or(BhasaPrakaar::Unknown))
-    } else {
-        iskeandarjaao(searchpath)
-    }
 }
 pub fn checksrcexists(src_dir: &std::path::Path, default_code_dir: &std::path::Path, prjd: &std::path::Path)->Result<(), Box<dyn std::error::Error>> {
     if !src_dir.exists() {
