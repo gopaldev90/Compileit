@@ -146,6 +146,7 @@ fn main() {
         utils::error("anjaan os");
         std::process::exit(1);
     }
+    
     if haiandroid {
         extension = "axe".to_string();
     }else {
