@@ -1,9 +1,30 @@
 use crate::utils;
+use toml;
+fn tomlcontprjnam(file_path:std::path::PathBuf,project_dir:&std::path::Path)->Result<(),Box<dyn std::error::Error>>{
+    let content = std::fs::read_to_string(file_path)?;
+    let value: toml::Value = toml::from_str(&content)?;
+    let name = value["package"]["name"].as_str().unwrap();
+    if name!=project_dir.display().to_string(){
+        utils::error(&format!(
+            r#"Project name mismatch:
+          Directory : {}
+          Cargo.toml: {}
+        
+        Rename the directory or update package.name in Cargo.toml."#,
+            project_dir.display(),
+            name
+        ));
+        Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, "",)))
+    }else{
+        Ok(())
+    }
+}
+
 pub fn compile_project(default_code_dir: &std::path::Path, home: &std::path::Path, extension: &str, prjd: &str, mode: bool) -> Result<(), Box<dyn std::error::Error>> {
     let project_dir = std::path::Path::new(prjd);
-    let project_root = default_code_dir.join(project_dir);
+    let default_code_dir_project_root = default_code_dir.join(project_dir);
     let home_project = home.join(project_dir);
-    let src_dir = project_root.join("src");
+    let src_dir = default_code_dir_project_root.join("src");
     let home_src = home_project.join("src");
     let dest_dir = default_code_dir.join(&project_dir);
     let exe_name = format!("{prjd}.{extension}");
@@ -11,11 +32,11 @@ pub fn compile_project(default_code_dir: &std::path::Path, home: &std::path::Pat
     let original_bin = release_dir.join(project_dir);
     let renamed_bin = release_dir.join(&exe_name);
     utils::checksrcexists(&src_dir, &default_code_dir, &std::path::PathBuf::from(prjd))?;
+    tomlcontprjnam(default_code_dir_project_root.join("Cargo.toml"),project_dir)?;
     let mut copyganna: u32 = utils::copy_dir(&src_dir, &home_src)?;
     let outputbinpath = dest_dir.join(&exe_name);
     let cargolofkname = "Cargo.lock";
-    for file in ["Cargo.toml",
-        cargolofkname] {
+    for file in ["Cargo.toml",cargolofkname] {
         let src = default_code_dir.join(&project_dir).join(file);
         let dst = home_project.join(file);
         if src.exists() {

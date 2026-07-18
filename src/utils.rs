@@ -118,6 +118,7 @@ fn recursive_scan(dir: &Path) -> std::io::Result<BhasaPrakaar> {
 
     Ok(BhasaPrakaar::Unknown)
 }
+
 pub fn checksrcexists(src_dir: &std::path::Path, default_code_dir: &std::path::Path, prjd: &std::path::Path)->Result<(), Box<dyn std::error::Error>> {
     if !src_dir.exists() {
         println!("{} project hai hee nhin", prjd.display());
