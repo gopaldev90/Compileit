@@ -74,7 +74,7 @@ fn sambhaalo_input(args: &[String], extension: &str) ->i32 {
             other => other.to_string(),
         }
     };
-    if filename.ends_with("/"){
+    if filename.ends_with("/") {
         filename.pop();
     }
     if filename == "." {
@@ -87,8 +87,8 @@ fn sambhaalo_input(args: &[String], extension: &str) ->i32 {
         println!("ismain {}", defalt_code_dir.display());
         return 0;
     }
-    let mode = utils::decide_project_type(&path).unwrap();
-    let pathhaidir:bool=path.is_dir();
+    let mode = utils::decide_project_type(&path).unwrap_or(utils::BhasaPrakaar::Unknown);
+    let pathhaidir: bool = path.is_dir();
     let safalparin = match mode {
         utils::BhasaPrakaar::Rust => {
             let safalparin = if pathhaidir {
@@ -136,6 +136,23 @@ fn sambhaalo_input(args: &[String], extension: &str) ->i32 {
     safalparin
 }
 
+fn generalise(mut v: u128) -> (String, u128) {
+    let units = [
+        ("Microseconds", 1000),
+        ("Milliseconds", 1000),
+        ("Seconds", 60),
+        ("Minutes", 60),
+        ("Hours", 1),
+    ];
+
+    let mut idx = 0;
+    while idx < units.len() - 1 && v >= units[idx].1 {
+        v /= units[idx].1;
+        idx += 1;
+    }
+    (units[idx].0.to_string(), v)
+}
+
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let extension: String;
@@ -146,7 +163,6 @@ fn main() {
         utils::error("anjaan os");
         std::process::exit(1);
     }
-    
     if haiandroid {
         extension = "axe".to_string();
     }else {
@@ -154,17 +170,17 @@ fn main() {
     }
     let aarambh = std::time::Instant::now();
     let safalparin = sambhaalo_input(&args, &extension);
-    let lga = aarambh.elapsed().as_secs();
+    let (unit, lga) = generalise(aarambh.elapsed().as_micros().into());
     match safalparin {
         0 => {
             utils::error("sangrahit vifal");
         }
         1 => {
             utils::success("sangrahit safaltapoorvak");
-            utils::info(&format!("samay lga(seconds): {:.2}", lga));
+            utils::info(&format!("samay lga({}): {:.2}", unit, lga));
         }
         _ => {}
     }
-    let exitcode:i32 = 1-i32::from([1, 4, 5, 6].contains(&safalparin));
+    let exitcode: i32 = 1-i32::from([1, 4, 5, 6].contains(&safalparin));
     std::process::exit(exitcode);
 }
