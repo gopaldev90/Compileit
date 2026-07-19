@@ -168,6 +168,7 @@ fn main() {
     }else {
         extension = "mixe".to_string();
     }
+    println!("current version: {}", std::env!("CARGO_PKG_VERSION"));
     let aarambh = std::time::Instant::now();
     let safalparin = sambhaalo_input(&args, &extension);
     let (unit, lga) = generalise(aarambh.elapsed().as_micros().into());
