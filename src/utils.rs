@@ -134,7 +134,7 @@ pub fn copy_dir(src: &std::path::Path, dst: &std::path::Path) -> Result<u32, Str
         let entry = entry.map_err(|e| e.to_string())?;
         let ty = entry.file_type().map_err(|e| e.to_string())?;
         if ty.is_dir() {
-            copy_dir(&entry.path(), &dst.join(entry.file_name()))?;
+            copiganna+=copy_dir(&entry.path(), &dst.join(entry.file_name()))?;
         } else {
             let src = entry.path();
             let dest = dst.join(entry.file_name());
