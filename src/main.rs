@@ -177,10 +177,7 @@ fn run_react_vite_watcher(path: &std::path::Path,home: &std::path::Path,prjd: &s
                                 std::fs::create_dir_all(parent)
                                     .expect("failed to create directories");
                             }
-
-                            std::fs::copy(changed, &dest)
-                                .expect("failed to copy");
-
+                            std::fs::copy(changed, &dest).expect("failed to copy");
                             println!("Copied -> {}", dest.display());
                         }
                     }
