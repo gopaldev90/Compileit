@@ -147,11 +147,6 @@ fn sambhaalo_input(args: &[String], extension: &str) ->i32 {
     };
     safalparin
 }
-use notify:: {
-    Config,
-    RecommendedWatcher,
-    RecursiveMode
-};
 
 fn run_react_vite_watcher(srcproject_path: &std::path::Path, home: &std::path::Path, prjd: &str,) -> ! {
     let (tx, rx) = channel();
@@ -171,8 +166,8 @@ fn run_react_vite_watcher(srcproject_path: &std::path::Path, home: &std::path::P
         }
     }
     utils::copy_dir(srcproject_path, &dest).expect("failed to copy project");
-    let mut watcher = RecommendedWatcher::new(tx, Config::default()).expect("failed to create watcher");
-    watcher.watch(srcproject_path, RecursiveMode::Recursive).expect("failed to watch");
+    let mut watcher = notify::RecommendedWatcher::new(tx, notify::Config::default()).expect("failed to create watcher");
+    watcher.watch(srcproject_path, notify::RecursiveMode::Recursive).expect("failed to watch");
     println!("Watching for changes...");
     for res in rx {
         match res {
