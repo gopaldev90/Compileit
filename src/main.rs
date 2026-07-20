@@ -3,14 +3,13 @@ mod cplusplus;
 mod java;
 mod utils;
 mod golang;
-use notify:: {
-    Config,
-    RecommendedWatcher,
-    RecursiveMode,
-    Watcher
-};
+use notify;
 use std::sync::mpsc::channel;
-use notify::event::EventKind;
+use notify::Watcher;
+use notify::event:: {
+    EventKind,
+    ModifyKind
+};
 
 fn checkln(args: &[String], akaar: usize, msg: &str) {
     if args.len() < akaar {
@@ -138,8 +137,8 @@ fn sambhaalo_input(args: &[String], extension: &str) ->i32 {
             i32::from(safalparin)
         }
         utils::BhasaPrakaar::ReactVite => {
-            println!("defalt_code_dir: {}",defalt_code_dir.display());
-            run_react_vite_watcher(&path,&home,&filename);
+            println!("defalt_code_dir: {}", defalt_code_dir.display());
+            run_react_vite_watcher(&path, &home, &filename);
         }
         utils::BhasaPrakaar::Unknown => {
             utils::error(&format!("Cannot find language of this"));
@@ -148,48 +147,128 @@ fn sambhaalo_input(args: &[String], extension: &str) ->i32 {
     };
     safalparin
 }
+use notify:: {
+    Config,
+    RecommendedWatcher,
+    RecursiveMode
+};
 
-fn run_react_vite_watcher(path: &std::path::Path,home: &std::path::Path,prjd: &str) -> ! {
+fn run_react_vite_watcher(srcproject_path: &std::path::Path, home: &std::path::Path, prjd: &str,) -> ! {
     let (tx, rx) = channel();
+    let dest = home.join(prjd);
+    if dest.exists() {
+        for entry in std::fs::read_dir(&dest).expect("failed to read destination") {
+            let entry = entry.expect("failed to read entry");
+            let path = entry.path();
+            if path.file_name().and_then(|n| n.to_str()) == Some("node_modules") {
+                continue;
+            }
+            if path.is_dir() {
+                std::fs::remove_dir_all(&path).expect("failed to remove directory");
+            } else {
+                std::fs::remove_file(&path).expect("failed to remove file");
+            }
+        }
+    }
 
+    utils::copy_dir(srcproject_path, &dest).expect("failed to copy project");
     let mut watcher = RecommendedWatcher::new(tx, Config::default())
-        .expect("failed to create watcher");
-
-    watcher
-        .watch(path, RecursiveMode::Recursive)
-        .expect("failed to watch");
-
+    .expect("failed to create watcher");
+    watcher.watch(srcproject_path, RecursiveMode::Recursive).expect("failed to watch");
     println!("Watching for changes...");
-
     for res in rx {
         match res {
             Ok(event) => {
+                println!("{:#?}", event);
+
                 match event.kind {
-                    EventKind::Modify(_)
-                    | EventKind::Create(_)
-                    | EventKind::Remove(_) => {
+                    // ---------- Rename ----------
+                    EventKind::Modify(ModifyKind::Name(notify::event::RenameMode::Both)) => {
+                        if event.paths.len() == 2 {
+                            let old_rel = event.paths[0].strip_prefix(srcproject_path).unwrap();
+                            let new_rel = event.paths[1].strip_prefix(srcproject_path).unwrap();
+                            let old_dest = home.join(prjd).join(old_rel);
+                            let new_dest = home.join(prjd).join(new_rel);
+
+                            if let Some(parent) = new_dest.parent() {
+                                std::fs::create_dir_all(parent).unwrap();
+                            }
+
+                            std::fs::rename(&old_dest, &new_dest).unwrap();
+
+                            println!(
+                                "Renamed {} -> {}",
+                                old_dest.display(),
+                                new_dest.display()
+                            );
+                        }
+                    }
+                    EventKind::Modify(ModifyKind::Name(_)) => {
+                        println!("Rename event");
+
+                        // Ignore for now.
+                        // We'll implement proper rename handling next.
+                    }
+
+                    // ---------- Create / Modify ----------
+                    EventKind::Create(_)
+                    | EventKind::Modify(ModifyKind::Data(_))
+                    | EventKind::Modify(ModifyKind::Metadata(_)) => {
                         for changed in &event.paths {
-                            println!("Changed: {}", changed.display());
-                            let relative = match changed.strip_prefix(path) {Ok(r) => r,Err(_) => continue,};
+                            if !changed.is_file() {
+                                continue;
+                            }
+
+                            let relative = match changed.strip_prefix(srcproject_path) {
+                                Ok(r) => r,
+                                Err(_) => continue,
+                            };
+
                             let dest = home.join(prjd).join(relative);
-                            println!("relative {}",relative.display());
+
                             if let Some(parent) = dest.parent() {
                                 std::fs::create_dir_all(parent)
-                                    .expect("failed to create directories");
+                                .expect("failed to create directories");
                             }
-                            std::fs::copy(changed, &dest).expect("failed to copy");
+
+                            std::fs::copy(changed, &dest)
+                            .expect("failed to copy");
+
                             println!("Copied -> {}", dest.display());
                         }
                     }
+
+                    // ---------- Remove ----------
+                    EventKind::Remove(_) => {
+                        for changed in &event.paths {
+                            let relative = match changed.strip_prefix(srcproject_path) {
+                                Ok(r) => r,
+                                Err(_) => continue,
+                            };
+
+                            let dest = home.join(prjd).join(relative);
+
+                            if dest.is_file() {
+                                let _ = std::fs::remove_file(&dest);
+                                println!("Removed file -> {}", dest.display());
+                            } else if dest.is_dir() {
+                                let _ = std::fs::remove_dir_all(&dest);
+                                println!("Removed directory -> {}", dest.display());
+                            }
+                        }
+                    }
+
                     _ => {}
                 }
             }
+
             Err(e) => eprintln!("Watch error: {e}"),
         }
     }
 
     unreachable!("watcher channel closed");
 }
+
 fn generalise(mut v: u128) -> (String, u128) {
     let units = [
         ("Microseconds", 1000),
