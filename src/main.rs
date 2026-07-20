@@ -170,17 +170,14 @@ fn run_react_vite_watcher(srcproject_path: &std::path::Path, home: &std::path::P
             }
         }
     }
-
     utils::copy_dir(srcproject_path, &dest).expect("failed to copy project");
-    let mut watcher = RecommendedWatcher::new(tx, Config::default())
-    .expect("failed to create watcher");
+    let mut watcher = RecommendedWatcher::new(tx, Config::default()).expect("failed to create watcher");
     watcher.watch(srcproject_path, RecursiveMode::Recursive).expect("failed to watch");
     println!("Watching for changes...");
     for res in rx {
         match res {
             Ok(event) => {
                 println!("{:#?}", event);
-
                 match event.kind {
                     // ---------- Rename ----------
                     EventKind::Modify(ModifyKind::Name(notify::event::RenameMode::Both)) => {
@@ -203,14 +200,7 @@ fn run_react_vite_watcher(srcproject_path: &std::path::Path, home: &std::path::P
                             );
                         }
                     }
-                    EventKind::Modify(ModifyKind::Name(_)) => {
-                        println!("Rename event");
-
-                        // Ignore for now.
-                        // We'll implement proper rename handling next.
-                    }
-
-                    // ---------- Create / Modify ----------
+                    EventKind::Modify(ModifyKind::Name(_)) => {}
                     EventKind::Create(_)
                     | EventKind::Modify(ModifyKind::Data(_))
                     | EventKind::Modify(ModifyKind::Metadata(_)) => {
@@ -218,26 +208,20 @@ fn run_react_vite_watcher(srcproject_path: &std::path::Path, home: &std::path::P
                             if !changed.is_file() {
                                 continue;
                             }
-
                             let relative = match changed.strip_prefix(srcproject_path) {
                                 Ok(r) => r,
                                 Err(_) => continue,
                             };
-
                             let dest = home.join(prjd).join(relative);
-
                             if let Some(parent) = dest.parent() {
                                 std::fs::create_dir_all(parent)
                                 .expect("failed to create directories");
                             }
-
                             std::fs::copy(changed, &dest)
                             .expect("failed to copy");
-
                             println!("Copied -> {}", dest.display());
                         }
                     }
-
                     // ---------- Remove ----------
                     EventKind::Remove(_) => {
                         for changed in &event.paths {
@@ -245,9 +229,7 @@ fn run_react_vite_watcher(srcproject_path: &std::path::Path, home: &std::path::P
                                 Ok(r) => r,
                                 Err(_) => continue,
                             };
-
                             let dest = home.join(prjd).join(relative);
-
                             if dest.is_file() {
                                 let _ = std::fs::remove_file(&dest);
                                 println!("Removed file -> {}", dest.display());
@@ -257,15 +239,12 @@ fn run_react_vite_watcher(srcproject_path: &std::path::Path, home: &std::path::P
                             }
                         }
                     }
-
                     _ => {}
                 }
             }
-
             Err(e) => eprintln!("Watch error: {e}"),
         }
     }
-
     unreachable!("watcher channel closed");
 }
 
