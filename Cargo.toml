@@ -4,6 +4,7 @@ version = "1.2.0"
 edition = "2024"
 
 [dependencies]
+notify = "8"
 colored = "*"
 toml = "*"
 hex = "*"

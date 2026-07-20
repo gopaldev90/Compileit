@@ -16,6 +16,7 @@ pub enum BhasaPrakaar {
     Cplusplus,
     Golang,
     Java,
+    ReactVite,
     Unknown
 }
 
@@ -29,12 +30,21 @@ pub fn error(msg: &str) {
 pub fn info(msg: &str) {
     println!("{}", msg.cyan().bold());
 }
-fn lang_from_extension(ext: &str) -> Option<BhasaPrakaar> {
-    match ext {
-        "rs" => Some(BhasaPrakaar::Rust),
-        "cpp" | "cc" | "cxx" => Some(BhasaPrakaar::Cplusplus),
-        "go" => Some(BhasaPrakaar::Golang),
-        "java" => Some(BhasaPrakaar::Java),
+fn lang_from_extension(path: &std::path::Path) -> Option<BhasaPrakaar> {
+    if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
+        match name {
+            "vite.config.js"
+            | "vite.config.ts"
+            | "vite.config.mjs"
+            | "vite.config.cjs" => return Some(BhasaPrakaar::ReactVite),
+            _ => {}
+        }
+    }
+    match path.extension().and_then(|e| e.to_str()) {
+        Some("rs") => Some(BhasaPrakaar::Rust),
+        Some("go") => Some(BhasaPrakaar::Golang),
+        Some("java") => Some(BhasaPrakaar::Java),
+        Some("cpp") | Some("cc") | Some("cxx") => Some(BhasaPrakaar::Cplusplus),
         _ => None,
     }
 }
@@ -42,11 +52,7 @@ fn lang_from_extension(ext: &str) -> Option<BhasaPrakaar> {
 pub fn decide_project_type(searchpath: &Path) -> std::io::Result<BhasaPrakaar> {
     if searchpath.is_file() {
         return Ok(
-            searchpath
-                .extension()
-                .and_then(|e| e.to_str())
-                .and_then(lang_from_extension)
-                .unwrap_or(BhasaPrakaar::Unknown),
+            lang_from_extension(searchpath).unwrap_or(BhasaPrakaar::Unknown),
         );
     }
     if searchpath.join("Cargo.toml").exists() {
@@ -69,11 +75,7 @@ pub fn decide_project_type(searchpath: &Path) -> std::io::Result<BhasaPrakaar> {
     for entry in std::fs::read_dir(searchpath)? {
         let path = entry?.path();
         if path.is_file() {
-            if let Some(lang) = path
-                .extension()
-                .and_then(|e| e.to_str())
-                .and_then(lang_from_extension)
-            {
+            if let Some(lang) = lang_from_extension(&path){
                 return Ok(lang);
             }
         }
@@ -107,11 +109,7 @@ fn recursive_scan(dir: &Path) -> std::io::Result<BhasaPrakaar> {
             if lang != BhasaPrakaar::Unknown {
                 return Ok(lang);
             }
-        } else if let Some(lang) = path
-            .extension()
-            .and_then(|e| e.to_str())
-            .and_then(lang_from_extension)
-        {
+        } else if let Some(lang) =lang_from_extension(&path){
             return Ok(lang);
         }
     }

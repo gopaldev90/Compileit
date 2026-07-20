@@ -3,6 +3,15 @@ mod cplusplus;
 mod java;
 mod utils;
 mod golang;
+use notify:: {
+    Config,
+    RecommendedWatcher,
+    RecursiveMode,
+    Watcher
+};
+use std::sync::mpsc::channel;
+use notify::event::EventKind;
+
 fn checkln(args: &[String], akaar: usize, msg: &str) {
     if args.len() < akaar {
         utils::error(&format!("{}", msg));
@@ -128,6 +137,10 @@ fn sambhaalo_input(args: &[String], extension: &str) ->i32 {
             };
             i32::from(safalparin)
         }
+        utils::BhasaPrakaar::ReactVite => {
+            println!("defalt_code_dir: {}",defalt_code_dir.display());
+            run_react_vite_watcher(&path,&home,&filename);
+        }
         utils::BhasaPrakaar::Unknown => {
             utils::error(&format!("Cannot find language of this"));
             6
@@ -136,6 +149,50 @@ fn sambhaalo_input(args: &[String], extension: &str) ->i32 {
     safalparin
 }
 
+fn run_react_vite_watcher(path: &std::path::Path,home: &std::path::Path,prjd: &str) -> ! {
+    let (tx, rx) = channel();
+
+    let mut watcher = RecommendedWatcher::new(tx, Config::default())
+        .expect("failed to create watcher");
+
+    watcher
+        .watch(path, RecursiveMode::Recursive)
+        .expect("failed to watch");
+
+    println!("Watching for changes...");
+
+    for res in rx {
+        match res {
+            Ok(event) => {
+                match event.kind {
+                    EventKind::Modify(_)
+                    | EventKind::Create(_)
+                    | EventKind::Remove(_) => {
+                        for changed in &event.paths {
+                            println!("Changed: {}", changed.display());
+                            let relative = match changed.strip_prefix(path) {Ok(r) => r,Err(_) => continue,};
+                            let dest = home.join(prjd).join(relative);
+                            println!("relative {}",relative.display());
+                            if let Some(parent) = dest.parent() {
+                                std::fs::create_dir_all(parent)
+                                    .expect("failed to create directories");
+                            }
+
+                            std::fs::copy(changed, &dest)
+                                .expect("failed to copy");
+
+                            println!("Copied -> {}", dest.display());
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            Err(e) => eprintln!("Watch error: {e}"),
+        }
+    }
+
+    unreachable!("watcher channel closed");
+}
 fn generalise(mut v: u128) -> (String, u128) {
     let units = [
         ("Microseconds", 1000),
