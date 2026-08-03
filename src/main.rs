@@ -14,7 +14,6 @@ use notify::event:: {
 fn checkln(args: &[String], akaar: usize, msg: &str) {
     if args.len() < akaar {
         utils::error(&format!("{}", msg));
-        utils::error("run help for details");
         utils::info("run compileit -help");
         std::process::exit(1);
     }
@@ -71,11 +70,13 @@ fn sambhaalo_input(args: &[String], extension: &str) ->i32 {
                 return 5;
             }
             "-newfile" => {
-                checkln(&args, 2, "file ka naam.extension do Jo bnani hai");
-                if let Some((filename, extension)) = args[1].rsplit_once('.') {
+                let inmsg="file ka naam.extension do Jo bnani hai".to_string();
+                checkln(&args, 3, &inmsg);
+                if let Some((filename, extension)) = args[2].rsplit_once('.') {
                     let _ = utils::snippets(filename, extension);
                     return 4;
                 } else {
+                    utils::error(&inmsg);
                     return 3;
                 }
             }

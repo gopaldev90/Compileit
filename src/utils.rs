@@ -211,7 +211,6 @@ pub fn copy_file(
 pub fn snippets(name: &str, prakaar: &str) -> std::io::Result<()> {
     fn html_boiler(name: &str) -> io::Result<()> {
         let filename = format!("{}.html", name);
-        // Embedded template
         let content = include_str!("templates/html.html");
         std::fs::write(&filename, content)?;
         println!("{} created Safaltapoorvak", filename);
@@ -236,7 +235,7 @@ pub fn snippets(name: &str, prakaar: &str) -> std::io::Result<()> {
         "cpp" => cpp_boiler(name),
         "java" => java_hoiler(name),
         _ => {
-            eprintln!("Unknown snippet type: {}", prakaar);
+            println!("Unknown snippet type: {}", prakaar);
             Err(std::io::Error::other("mainfilename does not exist"))
         }
     }
@@ -245,7 +244,7 @@ pub fn haiandroid()->bool {
     let os = std::env::consts::OS;
     os == "android"
 }
-pub fn move_file(src: &Path, dst: &Path) -> io::Result<()> {
+pub fn move_file(src: &std::path::Path, dst: &std::path::Path) -> io::Result<()> {
     match std::fs::rename(src, dst) {
         Ok(_) => Ok(()),
         Err(_e) => {
