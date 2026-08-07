@@ -49,7 +49,7 @@ pub fn compile_project(default_code_dir: &std::path::Path, home: &std::path::Pat
                     copyganna += 1;
                 }
             }
-        }else {
+        }else if file!=cargolofkname{
             println!("{file} nhin mili");
             return Err(Box::new(std::io::Error::new(std::io::ErrorKind::Other, "file not mili",)));
         }
