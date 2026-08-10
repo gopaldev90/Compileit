@@ -266,8 +266,7 @@ fn main() {
     let extension: String;
     let haiandroid = utils::haiandroid();
     let hailinux = std::env::consts::OS == "linux";
-    let hailinuxkernal = hailinux || haiandroid;
-    if !hailinuxkernal {
+    if !(hailinux || haiandroid) {
         utils::error("anjaan os");
         std::process::exit(1);
     }
