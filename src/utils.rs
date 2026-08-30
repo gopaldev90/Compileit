@@ -30,6 +30,40 @@ pub fn error(msg: &str) {
 pub fn info(msg: &str) {
     println!("{}", msg.cyan().bold());
 }
+pub fn checkup() -> bool {
+    let tools = [
+        ("cargo", "--version"),
+        ("java", "--version"),
+        ("go", "version"),
+        ("clang", "--version"),
+    ];
+    let mut all_installed = true;
+    for (command, arg) in tools {
+        let installed = std::process::Command::new(command).arg(arg).status().map(|status| status.success()).unwrap_or(false);
+        if !installed {
+            println!("{command} is not installed or not found.");
+            all_installed = false;
+        }
+    }
+    all_installed
+}
+pub fn generalise(mut v: u128) -> (String, u128) {
+    let units = [
+        ("Microseconds", 1000),
+        ("Milliseconds", 1000),
+        ("Seconds", 60),
+        ("Minutes", 60),
+        ("Hours", 1),
+    ];
+
+    let mut idx = 0;
+    while idx < units.len() - 1 && v >= units[idx].1 {
+        v /= units[idx].1;
+        idx += 1;
+    }
+    (units[idx].0.to_string(), v)
+}
+
 fn lang_from_extension(path: &std::path::Path) -> Option<BhasaPrakaar> {
     if let Some(name) = path.file_name().and_then(|n| n.to_str()) {
         match name {

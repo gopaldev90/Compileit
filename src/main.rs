@@ -10,7 +10,17 @@ use notify::event:: {
     EventKind,
     ModifyKind
 };
-
+enum ParinPrakaar{
+    Sahayta,
+    Snippetscreated,
+    Amanyanayifilename,
+    CheckupSuccess,
+    CheckupFail,
+    PathNotExists,
+    SangrahitSafal,
+    SangrahitVifal,
+    UnknownBhasha,
+}
 fn checkln(args: &[String], akaar: usize, msg: &str) {
     if args.len() < akaar {
         utils::error(&format!("{}", msg));
@@ -18,7 +28,6 @@ fn checkln(args: &[String], akaar: usize, msg: &str) {
         std::process::exit(1);
     }
 }
-
 fn sahayta() {
     println!("=== CompileIt ===");
     println!();
@@ -56,7 +65,7 @@ fn sahayta() {
     println!("  Go   (.go)");
     println!("  Java (.java)");
 }
-fn sambhaalo_input(args: &[String], extension: &str) ->i32 {
+fn sambhaalo_input(args: &[String], extension: &str) ->ParinPrakaar {
     let homestr = std::env::var("HOME").expect("HOME not set");
     let home = std::path::Path::new(&homestr);
     let mut defalt_code_dir = std::env::current_dir().unwrap();
@@ -67,18 +76,22 @@ fn sambhaalo_input(args: &[String], extension: &str) ->i32 {
         match args[1].as_str() {
             "-help" => {
                 sahayta();
-                return 5;
+                return ParinPrakaar::Sahayta;
             }
             "-newfile" => {
                 let inmsg="file ka naam.extension do Jo bnani hai".to_string();
                 checkln(&args, 3, &inmsg);
                 if let Some((filename, extension)) = args[2].rsplit_once('.') {
                     let _ = utils::snippets(filename, extension);
-                    return 4;
+                    return ParinPrakaar::Snippetscreated;
                 } else {
                     utils::error(&inmsg);
-                    return 3;
+                    return ParinPrakaar::Amanyanayifilename;
                 }
+            }
+            "-checkup" => {
+                utils::checkup();
+                return ParinPrakaar::CheckupSuccess;
             }
             other => other.to_string(),
         }
@@ -94,7 +107,7 @@ fn sambhaalo_input(args: &[String], extension: &str) ->i32 {
     if !path.exists() {
         println!("{} hai hee nhin", filename);
         println!("ismain {}", defalt_code_dir.display());
-        return 0;
+        return ParinPrakaar::PathNotExists;
     }
     let mode = utils::decide_project_type(&path).unwrap_or(utils::BhasaPrakaar::Unknown);
     let pathhaidir: bool = path.is_dir();
@@ -110,7 +123,11 @@ fn sambhaalo_input(args: &[String], extension: &str) ->i32 {
             } else {
                 rust::compile_single(&filename, &defalt_code_dir, &extension).is_ok()
             };
-            i32::from(safalparin)
+            if safalparin{
+                ParinPrakaar::SangrahitSafal
+            }else{
+                ParinPrakaar::SangrahitVifal
+            }
         }
         utils::BhasaPrakaar::Cplusplus => {
             let safalparin = if pathhaidir {
@@ -119,7 +136,11 @@ fn sambhaalo_input(args: &[String], extension: &str) ->i32 {
             }else {
                 cplusplus::compile_single(&filename, &defalt_code_dir, &extension).is_ok()
             };
-            i32::from(safalparin)
+            if safalparin{
+                ParinPrakaar::SangrahitSafal
+            }else{
+                ParinPrakaar::SangrahitVifal
+            }
         }
         utils::BhasaPrakaar::Golang => {
             let safalparin = if pathhaidir {
@@ -127,7 +148,11 @@ fn sambhaalo_input(args: &[String], extension: &str) ->i32 {
             }else {
                 golang::compile_single(&filename, &defalt_code_dir, &extension).is_ok()
             };
-            i32::from(safalparin)
+            if safalparin{
+                ParinPrakaar::SangrahitSafal
+            }else{
+                ParinPrakaar::SangrahitVifal
+            }
         }
         utils::BhasaPrakaar::Java => {
             let safalparin = if pathhaidir {
@@ -135,7 +160,11 @@ fn sambhaalo_input(args: &[String], extension: &str) ->i32 {
             }else {
                 java::single(&defalt_code_dir).is_ok()
             };
-            i32::from(safalparin)
+            if safalparin{
+                ParinPrakaar::SangrahitSafal
+            }else{
+                ParinPrakaar::SangrahitVifal
+            }
         }
         utils::BhasaPrakaar::ReactVite => {
             println!("defalt_code_dir: {}", defalt_code_dir.display());
@@ -143,12 +172,11 @@ fn sambhaalo_input(args: &[String], extension: &str) ->i32 {
         }
         utils::BhasaPrakaar::Unknown => {
             utils::error(&format!("Cannot find language of this"));
-            6
+            ParinPrakaar::UnknownBhasha
         }
     };
     safalparin
 }
-
 fn run_react_vite_watcher(srcproject_path: &std::path::Path, home: &std::path::Path, prjd: &str,) -> ! {
     let (tx, rx) = channel();
     let dest = home.join(prjd);
@@ -244,23 +272,6 @@ fn run_react_vite_watcher(srcproject_path: &std::path::Path, home: &std::path::P
     unreachable!("watcher channel closed");
 }
 
-fn generalise(mut v: u128) -> (String, u128) {
-    let units = [
-        ("Microseconds", 1000),
-        ("Milliseconds", 1000),
-        ("Seconds", 60),
-        ("Minutes", 60),
-        ("Hours", 1),
-    ];
-
-    let mut idx = 0;
-    while idx < units.len() - 1 && v >= units[idx].1 {
-        v /= units[idx].1;
-        idx += 1;
-    }
-    (units[idx].0.to_string(), v)
-}
-
 fn main() {
     let args: Vec<String> = std::env::args().collect();
     let extension: String;
@@ -278,17 +289,22 @@ fn main() {
     println!("compileit version: {}", std::env!("CARGO_PKG_VERSION"));
     let aarambh = std::time::Instant::now();
     let safalparin = sambhaalo_input(&args, &extension);
-    let (unit, lga) = generalise(aarambh.elapsed().as_micros().into());
-    match safalparin {
-        0 => {
+    let (unit, lga) = utils::generalise(aarambh.elapsed().as_micros().into());
+    let exitcode: i32=match safalparin {
+        ParinPrakaar::SangrahitVifal => {
             utils::error("sangrahit vifal");
+            1
         }
-        1 => {
+        ParinPrakaar::SangrahitSafal => {
             utils::success("sangrahit safaltapoorvak");
             utils::info(&format!("samay lga({}): {:.2}", unit, lga));
+            0
         }
-        _ => {}
-    }
-    let exitcode: i32 = 1-i32::from([1, 4, 5, 6].contains(&safalparin));
+        ParinPrakaar::Amanyanayifilename=>1,
+        ParinPrakaar::CheckupFail=>1,
+        ParinPrakaar::PathNotExists=>1,
+        ParinPrakaar::UnknownBhasha=>1,
+        _ =>0
+    };
     std::process::exit(exitcode);
 }
