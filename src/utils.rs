@@ -35,7 +35,7 @@ pub fn checkup() -> bool {
         ("cargo", "--version"),
         ("java", "--version"),
         ("go", "version"),
-        ("clang", "--version"),
+        ("clang++", "--version"),
     ];
     let mut all_installed = true;
     for (command, arg) in tools {

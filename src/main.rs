@@ -57,6 +57,7 @@ fn sahayta() {
     println!("Options:");
     println!("  -help                 Show this help.");
     println!("  -newfile <name.ext>   Create a new source file from a template.");
+    println!("  -checkup              Check all Supported languages is installed");
     println!();
 
     println!("Supported languages:");
@@ -90,8 +91,11 @@ fn sambhaalo_input(args: &[String], extension: &str) ->ParinPrakaar {
                 }
             }
             "-checkup" => {
-                utils::checkup();
-                return ParinPrakaar::CheckupSuccess;
+                if utils::checkup(){
+                    return ParinPrakaar::CheckupSuccess;
+                }else{
+                    return ParinPrakaar::CheckupFail;
+                }
             }
             other => other.to_string(),
         }
@@ -300,10 +304,10 @@ fn main() {
             utils::info(&format!("samay lga({}): {:.2}", unit, lga));
             0
         }
-        ParinPrakaar::Amanyanayifilename=>1,
-        ParinPrakaar::CheckupFail=>1,
-        ParinPrakaar::PathNotExists=>1,
-        ParinPrakaar::UnknownBhasha=>1,
+        ParinPrakaar::Amanyanayifilename
+        | ParinPrakaar::CheckupFail
+        | ParinPrakaar::PathNotExists
+        | ParinPrakaar::UnknownBhasha => 1,
         _ =>0
     };
     std::process::exit(exitcode);
