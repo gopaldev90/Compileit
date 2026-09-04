@@ -48,16 +48,30 @@ pub fn single(default_code_dir: &std::path::Path) -> std::io::Result<()> {
 }
 
 pub fn project(default_code_dir: &std::path::Path) -> std::io::Result<()> {
+    let bahasha = "java".to_string();
+    let hai_installed = std::process::Command::new(&bahasha)
+        .arg("--version")
+        .status()
+        .map(|status| status.success())
+        .unwrap_or(false);
+
+    if !hai_installed {
+        utils::error(&format!("{} is not installed", bahasha));
+        return Err(std::io::Error::other("not installed"));
+    }
     let src = default_code_dir.join("src/main/java");
     let lib = default_code_dir.join("lib");
+
     if !src.is_dir() {
-        println!("Source directory not found.");
-        std::process::exit(1);
+        println!("Source directory not found: {}", src.display());
+        return Err(std::io::Error::other("source directory not found"));
     }
-    let mut classpath = ".".to_string();
+    // Build classpath relative to project root.
+    let mut classpath = String::from("src/main/java");
     if lib.is_dir() {
         for entry in std::fs::read_dir(&lib)? {
             let path = entry?.path();
+
             if path.extension().and_then(|e| e.to_str()) == Some("jar") {
                 classpath.push(':');
                 classpath.push_str(path.to_str().unwrap());
@@ -65,12 +79,19 @@ pub fn project(default_code_dir: &std::path::Path) -> std::io::Result<()> {
         }
     }
     let mut javac = std::process::Command::new("javac");
-    javac.current_dir(&src);
-    javac.arg("-cp").arg(&classpath);
+    javac.current_dir(default_code_dir);
+    javac
+        .arg("-cp")
+        .arg(&classpath);
+    // Put .class files in src/main/java
+    javac
+        .arg("-d")
+        .arg(&src);
     for entry in std::fs::read_dir(&src)? {
         let path = entry?.path();
+
         if path.extension().and_then(|e| e.to_str()) == Some("java") {
-            javac.arg(path.file_name().unwrap());
+            javac.arg(path);
         }
     }
     let status = javac.status()?;
@@ -78,10 +99,27 @@ pub fn project(default_code_dir: &std::path::Path) -> std::io::Result<()> {
         println!("Compilation failed!");
         return Err(std::io::Error::other("javac failed"));
     }
-    let _ = std::process::Command::new("java")
-        .current_dir(&src)
-        .arg("-cp").arg(&classpath).arg("Main").status()?;
+    println!("Compilation successful!");
+    // -------------------------
+    // RUN
+    // -------------------------
+    let status = std::process::Command::new("java")
+        .current_dir(default_code_dir)
+        .arg("-cp")
+        .arg(&classpath)
+        .arg("Main")
+        .status()?;
+
+    if !status.success() {
+        println!("Program execution failed!");
+        return Err(std::io::Error::other("java failed"));
+    }
+
+    // -------------------------
+    // CLEANUP
+    // -------------------------
+
     cleanup_class_files(&src)?;
+
     Ok(())
 }
-
