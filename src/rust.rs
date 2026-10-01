@@ -1,7 +1,7 @@
 use crate::utils;
 use toml;
 fn tomlcontprjnam(file_path:std::path::PathBuf,project_dir:&std::path::Path)->Result<(),Box<dyn std::error::Error>>{
-    let content = std::fs::read_to_string(file_path)?;
+    let content = std::fs::read_to_string(&file_path)?;
     let value: toml::Value = toml::from_str(&content)?;
     let name = value["package"]["name"].as_str().unwrap();
     if name!=project_dir.display().to_string(){

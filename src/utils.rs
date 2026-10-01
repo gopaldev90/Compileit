@@ -224,7 +224,6 @@ pub fn copy_file(
     let filename = src.file_name().ok_or("missing filename")?
     .to_string_lossy()
     .to_string();
-
     if dst.exists() {
         let srchash = sha256_file(src)?;
         let dsthash = sha256_file(dst)?;

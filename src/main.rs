@@ -304,11 +304,11 @@ fn main() {
             utils::info(&format!("samay lga({}): {:.2}", unit, lga));
             0
         }
+        ParinPrakaar::CheckupSuccess|ParinPrakaar::Snippetscreated|ParinPrakaar::Sahayta=>0,
         ParinPrakaar::Amanyanayifilename
         | ParinPrakaar::CheckupFail
         | ParinPrakaar::PathNotExists
-        | ParinPrakaar::UnknownBhasha => 1,
-        _ =>0
+        | ParinPrakaar::UnknownBhasha => 1
     };
     std::process::exit(exitcode);
 }
