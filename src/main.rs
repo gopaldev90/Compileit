@@ -67,8 +67,6 @@ fn sahayta() {
     println!("  Java (.java)");
 }
 fn sambhaalo_input(args: &[String], extension: &str) ->ParinPrakaar {
-    let homestr = std::env::var("HOME").expect("HOME not set");
-    let home = std::path::Path::new(&homestr);
     let mut defalt_code_dir = std::env::current_dir().unwrap();
     utils::changdir(&defalt_code_dir);
     let mut filename = if args.len() <= 1 {
@@ -113,8 +111,9 @@ fn sambhaalo_input(args: &[String], extension: &str) ->ParinPrakaar {
         println!("ismain {}", defalt_code_dir.display());
         return ParinPrakaar::PathNotExists;
     }
-    let mode = utils::decide_project_type(&path).unwrap_or(utils::BhasaPrakaar::Unknown);
+    let home = std::path::PathBuf::from(std::env::var("HOME").expect("HOME not set"));
     let pathhaidir: bool = path.is_dir();
+    let mode = utils::decide_project_type(&path).unwrap_or(utils::BhasaPrakaar::Unknown);
     let safalparin = match mode {
         utils::BhasaPrakaar::Rust => {
             let safalparin = if pathhaidir {
@@ -294,6 +293,7 @@ fn main() {
     let aarambh = std::time::Instant::now();
     let safalparin = sambhaalo_input(&args, &extension);
     let (unit, lga) = utils::generalise(aarambh.elapsed().as_micros().into());
+    utils::info(&format!("samay lga({}): {:.2}", unit, lga));
     let exitcode: i32=match safalparin {
         ParinPrakaar::SangrahitVifal => {
             utils::error("sangrahit vifal");
@@ -301,14 +301,13 @@ fn main() {
         }
         ParinPrakaar::SangrahitSafal => {
             utils::success("sangrahit safaltapoorvak");
-            utils::info(&format!("samay lga({}): {:.2}", unit, lga));
             0
         }
-        ParinPrakaar::CheckupSuccess|ParinPrakaar::Snippetscreated|ParinPrakaar::Sahayta=>0,
+        ParinPrakaar::CheckupSuccess|ParinPrakaar::Snippetscreated|ParinPrakaar::Sahayta=>2,
         ParinPrakaar::Amanyanayifilename
         | ParinPrakaar::CheckupFail
         | ParinPrakaar::PathNotExists
-        | ParinPrakaar::UnknownBhasha => 1
+        | ParinPrakaar::UnknownBhasha => 3
     };
     std::process::exit(exitcode);
 }

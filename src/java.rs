@@ -1,15 +1,6 @@
 
 use crate::utils;
 
-fn cleanup_class_files(dir: &std::path::PathBuf) -> std::io::Result<()> {
-    for entry in std::fs::read_dir(dir)? {
-        let path = entry?.path();
-        if path.extension().and_then(|e| e.to_str()) == Some("class") {
-            let _ = std::fs::remove_file(path);
-        }
-    }
-    Ok(())
-}
 
 pub fn single(default_code_dir: &std::path::Path) -> std::io::Result<()> {
     utils::changdir(&default_code_dir);
@@ -38,12 +29,6 @@ pub fn single(default_code_dir: &std::path::Path) -> std::io::Result<()> {
         println!("Compilation failed.");
         std::process::exit(1);
     }
-    let class_name = file.file_stem().unwrap().to_string_lossy();
-    println!("✓✓✓ Running {} ✓✓✓", class_name);
-    std::process::Command::new("java")
-        .arg(&*class_name).status()?;
-    cleanup_class_files(&std::path::PathBuf::from("."))?;
-    println!("Program Finished.");
     Ok(())
 }
 
@@ -80,9 +65,7 @@ pub fn project(default_code_dir: &std::path::Path) -> std::io::Result<()> {
     }
     let mut javac = std::process::Command::new("javac");
     javac.current_dir(default_code_dir);
-    javac
-        .arg("-cp")
-        .arg(&classpath);
+    javac.arg("-cp").arg(&classpath);
     // Put .class files in src/main/java
     javac
         .arg("-d")
@@ -99,27 +82,5 @@ pub fn project(default_code_dir: &std::path::Path) -> std::io::Result<()> {
         println!("Compilation failed!");
         return Err(std::io::Error::other("javac failed"));
     }
-    println!("Compilation successful!");
-    // -------------------------
-    // RUN
-    // -------------------------
-    let status = std::process::Command::new("java")
-        .current_dir(default_code_dir)
-        .arg("-cp")
-        .arg(&classpath)
-        .arg("Main")
-        .status()?;
-
-    if !status.success() {
-        println!("Program execution failed!");
-        return Err(std::io::Error::other("java failed"));
-    }
-
-    // -------------------------
-    // CLEANUP
-    // -------------------------
-
-    cleanup_class_files(&src)?;
-
     Ok(())
 }
